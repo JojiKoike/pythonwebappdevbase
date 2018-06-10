@@ -25,6 +25,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     develop.vm.hostname = "develop.pythonwebapp"
     develop.vm.network "private_network", ip: "192.168.33.10"
 
+    config.vm.provision "shell", inline: <<-SHELL
+      sudo yum -y update
+    SHELL
     config.vm.provision "ansible" do |ansible|
       ansible.playbook = "provisioning/playbooks/develop.yml"
       ansible.inventory_path = "provisioning/hosts"
