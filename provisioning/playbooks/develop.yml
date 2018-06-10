@@ -15,3 +15,54 @@
       service:
         name: nginx
         state: started
+    - name: yum install with_items
+      yum:
+        name: '{{ item.name }}'
+        state: present
+      register: RESULT
+      with_items:
+        - name: git
+        - name: gcc
+        - name: gcc-c++
+        - name: make
+        - name: openssl-devel
+        - name: bzip2-devel
+        - name: zlib-devel
+        - name: readline-devel
+        - name: sqlite-devel
+        - name: bzip2
+        - name: sqlite
+        - name: patch
+    - name: results
+      debug: var=RESULT.results
+    - name: Install anyenv
+      git:
+        repo: https://github.com/riywo/anyenv
+        dest: /home/vagrant/.anyenv
+    - name: change ~/.anyenv owner to vagrant
+      file:
+        path: /home/vagrant/.anyenv
+        state: directory
+        owner: vagrant
+        group: vagrant
+        recurse: yes
+    - name: Add ~/.anyenv/bin to PATH
+      lineinfile:
+        dest="/home/vagrant/.bashrc"
+        line="export PATH=$HOME/.anyenv/bin:$PATH"
+    - name: Eval anyenv init in ~/.bash_profile
+      lineinfile:
+        dest="/home/vagrant/.bashrc"
+        line='eval "$(anyenv init -)"'
+    - name: Reload ~/.bash_profile
+      become_user: vagrant
+      shell: "exec $SHELL -l"
+    - name: Install pyenv
+      become_user: vagrant
+      shell: "anyenv install pyenv"
+    - name: Install Python 3.6.5
+      become_user: vagrant
+      shell: "pyenv install 3.6.5"
+    - name: Specify vagrant user Global Python version
+      become_user: vagrant
+      shell: "pyenv global 3.6.5"
