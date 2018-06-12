@@ -78,9 +78,8 @@
         state: present
     - name: Install Postgresql
       yum:
-        name: postgresql10
+        name: '{{ item.name }}'
         state: present
-    - name: Install Postgresql Server
-      yum:
-        name: postgresql10-server
-        state: present
+      with_items:
+        -name: postgresql10
+        -name: postgresql10-server
