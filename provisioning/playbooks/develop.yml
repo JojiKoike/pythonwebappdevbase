@@ -33,6 +33,7 @@
         - name: bzip2
         - name: sqlite
         - name: patch
+        - name: python-psycopg2
     - name: results
       debug: var=RESULT.results
     - name: Install anyenv
@@ -81,5 +82,22 @@
         name: '{{ item.name }}'
         state: present
       with_items:
-        -name: postgresql10
-        -name: postgresql10-server
+        - name: postgresql10
+        - name: postgresql10-server
+    - stat: path=/var/lib/pgsql/10/data/PG_VERSION
+      register: dbcluster
+    - name: initdb
+      shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
+      when: not dbcluster.stat.exists
+    - name: start postgresql server
+      service:
+        name: postgresql-10
+        state: started
+    - name: Create django User
+      become: true
+      become_user: postgres
+      postgresql_user:
+        name: django
+        password: password
+        encrypted: yes
+        role_attr_flags: CREATEDB,NOSUPERUSER
