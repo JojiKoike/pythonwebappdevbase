@@ -120,3 +120,17 @@
       postgresql_db:
         name: db_djangowebapp
         owner: django
+    - name: Create uwsgi socket directory
+      file:
+        path: /var/www/tmp/socket
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0750
+    - name: Create uwsgi logfile directory
+      file:
+        path: /var/log/uwsgi
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0750
