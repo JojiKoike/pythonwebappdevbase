@@ -94,10 +94,14 @@
         name: postgresql-10
         state: started
     - name: Create django User
-      become: true
       become_user: postgres
       postgresql_user:
         name: django
         password: password
         encrypted: yes
         role_attr_flags: CREATEDB,NOSUPERUSER
+    - name: Create database for django web app
+      become_user: postgres
+      postgresql_db:
+        name: db_djangowebapp
+        owner: django
