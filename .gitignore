@@ -1,2 +1,7 @@
+# Project Root
 .vagrant
 .venv
+
+# For Django
+*__pycache__
+*sqlite3
