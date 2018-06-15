@@ -5,3 +5,4 @@
 # For Django
 *__pycache__
 *sqlite3
+*reload.txt
