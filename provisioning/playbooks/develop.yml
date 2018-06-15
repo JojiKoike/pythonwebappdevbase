@@ -2,19 +2,41 @@
 - hosts: develop
   become: yes
   user: vagrant
+
   tasks:
     - name: Install nginx repository
       yum:
         name: http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
         state: present
+
     - name: Install nginx
       yum:
         name: nginx
         state: present
+
     - name: Starting nginx
       service:
         name: nginx
         state: started
+
+    - name: copy nginx config file
+      copy:
+        src: files/nginx.conf
+        dest: /etc/nginx/
+      notify: retart nginx
+
+    - name: copy nginx default config file
+      copy:
+        src: files/default.conf
+        dest: /etc/nginx/conf.d/
+      notify: restart nginx
+
+    #- name: copy nginx mysite config file
+    #  copy:
+    #    src: files/mysite.conf
+    #    dest: /etc/nginx/conf.d/
+    #  notify: restart nginx
+
     - name: yum install with_items
       yum:
         name: '{{ item.name }}'
@@ -36,10 +58,15 @@
         - name: python-psycopg2
     - name: results
       debug: var=RESULT.results
+
+    - stat: path=/home/vagrant/.anyenv
+      register: anyenvdir
     - name: Install anyenv
       git:
         repo: https://github.com/riywo/anyenv
         dest: /home/vagrant/.anyenv
+      when: not anyenvdir.stat.exists
+
     - name: change ~/.anyenv owner to vagrant
       file:
         path: /home/vagrant/.anyenv
@@ -47,36 +74,66 @@
         owner: vagrant
         group: vagrant
         recurse: yes
+
     - name: Add ~/.anyenv/bin to PATH
       lineinfile:
-        dest="/home/vagrant/.bashrc"
-        line="export PATH=$HOME/.anyenv/bin:$PATH"
-    - name: Eval anyenv init in ~/.bash_profile
+        dest: "/home/vagrant/.bashrc"
+        line: "export PATH=$HOME/.anyenv/bin:$PATH"
+
+    - name: Eval anyenv init in ~/.bashrc
       lineinfile:
-        dest="/home/vagrant/.bashrc"
-        line='eval "$(anyenv init -)"'
-    - name: Reload ~/.bash_profile
+        dest: "/home/vagrant/.bashrc"
+        line: 'eval "$(anyenv init -)"'
+
+    - name: Reload ~/.bashrc
       become_user: vagrant
       shell: "exec $SHELL -l"
+
+    - stat: path=/home/vagrant/.anyenv/envs/pyenv
+      register: pyenvdir
     - name: Install pyenv
       become_user: vagrant
       shell: "anyenv install pyenv"
-      ignore_errors: yes
+      when: not pyenvdir.stat.exists
+
+    - stat: path=/home/vagrant/.anyenv/envs/pyenv/versions/3.6.5
+      register: python365
     - name: Install Python 3.6.5
       become_user: vagrant
       shell: "pyenv install 3.6.5"
-      ignore_errors: yes
+      when: not python365.stat.exists
+
     - name: Specify vagrant user Global Python version
       become_user: vagrant
       shell: "pyenv global 3.6.5"
+
+    - name: Update pip
+      become_user: vagrant
+      shell: "pip install --upgrade pip"
+      register: result
+      changed_when: '"Requirement already up-to-date" not in result.stdout'
+
+    - name: Update setuptools
+      become_user: vagrant
+      shell: "pip install --upgrade setuptools"
+      register: retsult
+      changed_when: '"Requirement already up-to-date" not in result.stdout'
+
     - name: Install Python packages
       become_user: vagrant
-      shell: "pip install psycopg2"
-      ignore_errors: yes
+      pip:
+        name: '{{ item.name }}'
+      with_items:
+        - name: django
+        - name: djangorestframework
+        - name: psycopg2
+        - name: uwsgi
+
     - name: Install Postgresql official yum repository
       yum:
         name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
         state: present
+
     - name: Install Postgresql
       yum:
         name: '{{ item.name }}'
@@ -84,15 +141,18 @@
       with_items:
         - name: postgresql10
         - name: postgresql10-server
+
     - stat: path=/var/lib/pgsql/10/data/PG_VERSION
       register: dbcluster
     - name: initdb
       shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
       when: not dbcluster.stat.exists
+
     - name: start postgresql server
       service:
         name: postgresql-10
         state: started
+
     - name: Create django User
       become_user: postgres
       postgresql_user:
@@ -100,8 +160,31 @@
         password: password
         encrypted: yes
         role_attr_flags: CREATEDB,NOSUPERUSER
+
     - name: Create database for django web app
       become_user: postgres
       postgresql_db:
         name: db_djangowebapp
         owner: django
+
+    - name: Create uwsgi socket directory
+      file:
+        path: /var/www/tmp/socket
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0777
+
+    - name: Create uwsgi logfile directory
+      file:
+        path: /var/log/uwsgi
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0750
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
