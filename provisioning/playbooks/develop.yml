@@ -183,6 +183,32 @@
         group: vagrant
         mode: 0750
 
+    - name: Create uwsgi vassals directory for uwsgi emperor mode
+      file:
+        path: /etc/uwsgi/vassals
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0750
+
+    - name: Create Link for uwsgi vassals
+      file:
+        src: /var/www/application/mysite/uwsgi_mysite.ini
+        dest: /etc/uwsgi/vassals/uwsgi_mysite.ini
+        owner: vagrant
+        group: vagrant
+        state: link
+
+    - name: Copy emperor.ini
+      copy:
+        src: files/emperor.ini
+        dest: /etc/uwsgi
+
+    - name: Register uWSGI Service
+      copy:
+        src: files/uwsgi.service
+        dest: /etc/systemd/system/
+
   handlers:
     - name: restart nginx
       service:
