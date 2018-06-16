@@ -203,14 +203,25 @@
       copy:
         src: files/emperor.ini
         dest: /etc/uwsgi
+      notify: restart uwsgi
 
     - name: Register uWSGI Service
       copy:
         src: files/uwsgi.service
         dest: /etc/systemd/system/
+      notify: restart uwsgi
+
+    - name: start uwsgi
+      service:
+        name: uwsgi
+        state: started
 
   handlers:
     - name: restart nginx
       service:
         name: nginx
+        state: restarted
+    - name: restart uwsgi
+      service:
+        name: uwsgi
         state: restarted
