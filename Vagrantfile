@@ -12,7 +12,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Section 1 : Common Settings
   ###################################################
   # For Vagrant Cachier
-  if Vagrant.has_plugin?("vagrant-chainer")
+  if Vagrant.has_plugin?("vagrant-cachier")
     config.cache.scope = :box
   end
 
