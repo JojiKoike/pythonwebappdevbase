@@ -148,6 +148,11 @@
       shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
       when: not dbcluster.stat.exists
 
+    - name: Copy pg_hba.conf
+      copy:
+        src: files/pg_hba.conf
+        dest: /var/lib/pgsql/10/data
+
     - name: start postgresql server
       service:
         name: postgresql-10
@@ -166,6 +171,10 @@
       postgresql_db:
         name: db_djangowebapp
         owner: django
+
+    - name: Prepare Django DB Migration
+      become_user: vagrant
+      shell: python /var/www/application/mysite/manage.py migrate
 
     - name: Create uwsgi socket directory
       file:
