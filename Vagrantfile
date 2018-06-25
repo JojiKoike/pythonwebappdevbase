@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   ###################################################
-  # Section 2 : Individual Server Settings
+  # Section 2 : Individual Server VM Configuration
   ###################################################
   # Development Server
   config.vm.define :develop do |develop|
@@ -31,23 +31,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
                              owner: 'vagrant',
                              group: 'vagrant',
                              mount_options: ['dmode=777', 'fmode=777']
-
-
-    config.vm.provision "shell", inline: <<-SHELL
-      sudo yum -y update
-    SHELL
-    config.vm.provision "ansible" do |ansible|
-      ansible.playbook = "provisioning/playbooks/develop.yml"
-      ansible.inventory_path = "provisioning/hosts"
-      ansible.limit = 'develop'
-    end
   end
 
-  # CI Server
-  config.vm.define :ci do |ci|
-    ci.vm.box = "bento/centos-7.5"
-    ci.vm.hostname = "ci.pythonwebapp"
-    ci.vm.network "private_network", ip: "192.168.33.100"
+  # CICD Server
+  config.vm.define :cicd do |cicd|
+    cicd.vm.box = "bento/centos-7.5"
+    cicd.vm.hostname = "cicd.pythonwebapp"
+    cicd.vm.network "private_network", ip: "192.168.33.100"
   end
 
   # Deploy Target Server
@@ -55,5 +45,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     deploy.vm.box = "bento/centos-7.5"
     deploy.vm.hostname = "deploy.pythonwebapp"
     deploy.vm.network "private_network", ip: "192.168.33.200"
+  end
+
+  ###################################################
+  # Section 3 : Provisioning
+  ###################################################
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "provisioning/site.yml"
+    ansible.groups = {
+      "devservers" => ["develop"],
+      "cicdservers" => ["cicd"],
+      "depservers" => ["deploy"]
+    }
   end
 end

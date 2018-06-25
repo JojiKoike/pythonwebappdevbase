@@ -1,0 +1,45 @@
+---
+- name: Install Postgresql official yum repository
+  yum:
+    name: "{{ postgresql_repo }}"
+    state: present
+
+- name: Install Postgresql
+  yum:
+    name: '{{ item.name }}'
+    state: present
+  with_items:
+    - name: postgresql10
+    - name: postgresql10-server
+
+- stat: path=/var/lib/pgsql/10/data/PG_VERSION
+  register: dbcluster
+- name: initdb
+  shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
+  when: not dbcluster.stat.exists
+
+- name: Copy pg_hba.conf
+  copy:
+    src: files/pg_hba.conf
+    dest: /var/lib/pgsql/10/data
+
+- name: start postgresql server
+  service:
+    name: postgresql-10
+    state: started
+
+- name: Create django User
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: django
+    password: password
+    encrypted: yes
+    role_attr_flags: CREATEDB,NOSUPERUSER
+
+- name: Create database for django web app
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: db_djangowebapp
+    owner: django

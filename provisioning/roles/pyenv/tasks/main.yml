@@ -1,0 +1,54 @@
+---
+- stat: path=/home/vagrant/.pyenv
+  register: pyenvdir
+- name: Install pyenv
+  become_user: vagrant
+  git:
+    repo: https://github.com/pyenv/pyenv.git
+    dest: /home/vagrant/.pyenv
+  when: not pyenvdir.stat.exists
+
+- name: Add ~/.pyenv/bin to PATH
+  blockinfile:
+    path: "/home/vagrant/.bashrc"
+    block: |
+      export PYENV_ROOT="$HOME/.pyenv"
+      export PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+
+- name: Reload ~/.bashrc
+  become_user: vagrant
+  shell: "exec $SHELL -l"
+
+- stat: path=/home/vagrant/.pyenv/versions/3.6.5
+  register: python365
+- name: Install Python 3.6.5
+  become_user: vagrant
+  shell: "pyenv install {{python_version}}"
+  when: not python365.stat.exists
+
+- name: Specify vagrant user Global Python version
+  become_user: vagrant
+  shell: "pyenv global {{python_version}}"
+
+- name: Update pip
+  become_user: vagrant
+  shell: "pip install --upgrade pip"
+  register: result
+  changed_when: '"Requirement already up-to-date" not in result.stdout'
+
+- name: Update setuptools
+  become_user: vagrant
+  shell: "pip install --upgrade setuptools"
+  register: retsult
+  changed_when: '"Requirement already up-to-date" not in result.stdout'
+
+- name: Install Python packages
+  become_user: vagrant
+  pip:
+    name: '{{ item.name }}'
+  with_items:
+    - name: django
+    - name: djangorestframework
+    - name: psycopg2
+    - name: uwsgi

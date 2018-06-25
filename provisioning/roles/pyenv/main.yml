@@ -1,0 +1,2 @@
+nginx_repo: http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+python_veresion: 3.6.5

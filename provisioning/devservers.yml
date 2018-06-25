@@ -1,0 +1,7 @@
+---
+- hosts: devservers
+  roles:
+    - common
+    - nginx
+    - postgresql
+    - pyenv

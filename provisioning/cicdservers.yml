@@ -1,0 +1,4 @@
+---
+- hosts: cicdservers
+  roles:
+    - common

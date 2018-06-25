@@ -96,6 +96,10 @@
       shell: "anyenv install pyenv"
       when: not pyenvdir.stat.exists
 
+    - name: Reload ~/.bashrc
+      become_user: vagrant
+      shell: "exec $SHELL -l"
+
     - stat: path=/home/vagrant/.anyenv/envs/pyenv/versions/3.6.5
       register: python365
     - name: Install Python 3.6.5

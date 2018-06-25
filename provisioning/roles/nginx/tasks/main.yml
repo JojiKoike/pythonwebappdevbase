@@ -1,0 +1,19 @@
+---
+- name: Install nginx repository
+  become: true
+  yum:
+    name: "{{ nginx_repo }}"
+    state: present
+
+- name: Install nginx
+  become: true
+  yum:
+    name: nginx
+    state: present
+
+- name: Start And Enable nginx
+  become: true
+  service:
+    name: nginx
+    state: started
+    enabled: yes
