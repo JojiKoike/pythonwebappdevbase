@@ -1,0 +1,27 @@
+---
+- name: Install Jenkins yum repository
+  become: True
+  yum_repository:
+    name: "{{ jenkins_repo_name }}"
+    description: "{{ jenkins_repo_description }}"
+    baseurl: "{{ jenkins_repo }}"
+    gpgcheck: True
+
+- name: Install Jenkins yum repository key
+  become: True
+  rpm_key:
+    state: present
+    key: "{{ jenkins_repo_key }}"
+
+- name: Install Jenkins
+  become: True
+  yum:
+    name: jenkins
+    state: present
+
+- name: Start And Enable Jsnkins
+  become: True
+  service:
+    name: jenkins
+    state: started
+    enabled: True

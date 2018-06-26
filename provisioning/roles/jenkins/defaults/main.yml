@@ -1,0 +1,4 @@
+jenkins_repo: https://pkg.jenkins.io/redhat-stable
+jenkins_repo_name: jenkins
+jenkins_repo_description: Jenkins-stable
+jenkins_repo_key: https://pkg.jenkins.io/redhat-stable/jenkins.io.key
