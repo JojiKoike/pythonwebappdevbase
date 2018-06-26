@@ -2,3 +2,5 @@
 - hosts: cicdservers
   roles:
     - common
+    - openjdk
+    - jenkins
